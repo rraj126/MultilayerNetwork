@@ -1,0 +1,34 @@
+#do not change the order of required arguments
+#do not put spaces in arrays
+
+
+required_learning_arguments{
+    dataset: MNIST
+    break_points: 500:500:2000
+};
+
+optional_learning_arguments{
+    nlayers: 
+    layer_dims: 
+    organize_interval: 500
+    pfid: Aug8-1110
+    max_inhib: 10.0
+    lambda: 0.1
+    mode: 1
+    randomized:
+    verbose:
+    modulation_factor:
+};
+
+required_representation_arguments{
+    dataset: MNIST
+    input_indices: 30001:30500
+    sfid: Aug8-1110
+};
+
+optional_representation_arguments{
+    lambda: 0.1
+    mode: 0
+    verbose:
+    modulation_factor:
+};
