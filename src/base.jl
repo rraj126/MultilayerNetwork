@@ -57,7 +57,6 @@ function update_y(W::AbstractArray{<:Real, 2}, x::Vector{<:Real}, usr_args::Dict
     w_lateral = get(usr_args, :w_lateral, W'*W)
 
     input = W'*x
-    #w_lateral = W'*W
     
     gain = 10*calculate_gain(w_lateral)
     gain_inv = inv(gain)
@@ -84,13 +83,16 @@ function update_phi!(W::AbstractArray{<:Real, 2}, x::Vector{<:Real}, y::Vector{<
     step_size = get(usr_args, :step_size, 0.000005)
     n = 1000
     norm_y = norm(y)
-    
-    hebbian_coeff = ((1 - (1 - step_size)^n)/norm_y)*(1 - (1/norm_y))
-    anti_hebbian_coeff = ((1 - (1 - step_size)^n)/norm_y^2)
 
-    delta = W*y - x
-    delta_W = hebbian_coeff*x*y' - anti_hebbian_coeff*delta*y'
-    broadcast!(+, W, W, delta_W)
+    if !iszero(norm_y)
+        hebbian_coeff = ((1 - (1 - step_size)^n)/norm_y)*(1 - (1/norm_y))
+        anti_hebbian_coeff = ((1 - (1 - step_size)^n)/norm_y^2)
+
+        delta = W*y - x
+        delta_W = hebbian_coeff*x*y' - anti_hebbian_coeff*delta*y'
+        broadcast!(+, W, W, delta_W)
+
+    end
   
     return nothing
 end
