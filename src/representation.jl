@@ -98,9 +98,11 @@ function run_representation_procedure(usr_args::Dict{Symbol, Any})
     init_proj = load_file(sfid, "0", "d")
 
     for seq_id in usr_args[:sequence]
-        W = load_file(sfid, seq_id, "d")
-        w_lateral = load_file(sfid, seq_id, "c")
-        representation_loop!(seq_id, usr_args, W, w_lateral, init_proj)
+        if seq_id != "0"
+            W = load_file(sfid, seq_id, "d")
+            w_lateral = load_file(sfid, seq_id, "c")
+            representation_loop!(seq_id, usr_args, W, w_lateral, init_proj)
+        end
 
     end
     remove_test_set()
