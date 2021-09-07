@@ -17,39 +17,21 @@ function get_init_connections(usr_args::Dict{Symbol, Any})
     nlayers = usr_args[:nlayers]
     layer_dims = usr_args[:layer_dims]
 
-    if haskey(usr_args, :pfid)
-        pfile = string("Projection-", usr_args[:pfid])
-        W = load_file(usr_args[:pfid], "projection", "p")
-        
-    else
-        pfile = string()
-        W = Array{Array{Float64, 2}, 1}(undef, nlayers)
-
-    end
-
-    w_lateral = Array{Array{Float64, 2}, 1}(undef, nlayers)
-    connection_matrix = Array{Array{Float64, 2}, 1}(undef, nlayers)
-    init_proj = Array{Array{Float64, 2}, 1}(undef, nlayers)
-
     print("initializing connections... \n")
 
-    for layer in 1:nlayers
-        dim1, dim2 = 0, 0
-        try
-            dim1, dim2 = layer_dims[layer-1], layer_dims[layer]
-        catch
-            dim1, dim2 = 0, layer_dims[layer]
-        end 
-
-        isempty(pfile) ? W[layer] = initialize_feedforward_connections(usr_args[:dataset], dim1, dim2) : nothing
-
-        w_lateral[layer] = initialize_lateral_connections(dim2, max_inhib)
-        connection_matrix[layer] = initialize_connection_matrix(dim2)
-        init_proj[layer] = copy(W[layer])
-
+    if haskey(usr_args, :pfid)
+        W = load_file(usr_args[:pfid], "projection", "p")
+    else
+        W = initialize_feedforward_connections(usr_args[:dataset], layer_dims)
+        save_state(W, "projection", "p")
     end
 
-    isempty(pfile) ? save_state(init_proj, "projection", "p") : nothing
+    w_lateral = initialize_lateral_connections(max_inhib, layer_dims)
+    connection_matrix = initialize_connection_matrix(layer_dims)
+
+    init_proj = Array{Array{Float64, 2}, 1}(undef, nlayers)
+    for layer in 1:nlayers init_proj[layer] = copy(W[layer]) end
+
     return W, w_lateral, connection_matrix, init_proj
 end
 
