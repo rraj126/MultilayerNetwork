@@ -1,6 +1,35 @@
 using LinearAlgebra
 using FileIO, JLD
 
+function get_user_parameters(usr_args::Dict{Symbol, Any})
+    param_file = string(pwd(), "/parameter-files/parameters-", usr_args[:sfid], ".txt")
+    open(param_file, "r") do f
+        while !eof(f)
+            s = readline(f)
+
+            colon_index = findfirst(isequal(':'), s)
+            arg_string = s[1:colon_index-2]
+            value_string = s[colon_index+2:end]
+
+            if arg_string == "lambda"
+                lambda = Array{Float64, 1}(undef, 0)
+                for m in eachmatch(r"[0-9]+.[0-9]+", value_string) push!(lambda, parse(Float64, m.match)) end
+                get!(usr_args, :lambda, lambda)
+
+            elseif arg_string == "modulation_factor"
+                modulation_factor = Array{Float64, 1}(undef, 0)
+                for m in eachmatch(r"[0-9]+.[0-9]+", value_string) push!(modulation_factor, parse(Float64, m.match)) end
+                get!(usr_args, :modulation_factor, modulation_factor)
+
+            elseif arg_string == "dataset"
+                get!(usr_args, :dataset, value_string)
+
+            end
+
+        end
+    end
+end
+
 function fetch_inputs(usr_args::Dict{Symbol, Any})
     test_set_file = string(pwd(), "/data-files/test_set")
     input_matrix = initialize_input_matrix(usr_args[:dataset], length(usr_args[:input_indices]))
@@ -69,14 +98,14 @@ function representation_loop!(seq_id::String, usr_args::Dict{Symbol, Any}, conne
         input = test_inputs[:, input_count]
 
         for layer in 1:nlayers
-            yd = simulate_layer(Wd[layer], input, mode = usr_args[:mode], lambda = usr_args[:lambda], verbose = usr_args[:verbose])
+            yd = simulate_layer(Wd[layer], input, mode = usr_args[:mode], lambda = usr_args[:lambda][layer], verbose = usr_args[:verbose])
             Wc = get_selforg_dictionary(Wd[layer], init_proj[layer])
-            yc = simulate_layer(Wc, input, w_lateral = w_lateral[layer], mode = usr_args[:mode], lambda = usr_args[:lambda], verbose = usr_args[:verbose])
+            yc = simulate_layer(Wc, input, w_lateral = w_lateral[layer], mode = usr_args[:mode], lambda = usr_args[:lambda][layer], verbose = usr_args[:verbose])
 
             representation_c[layer][:, input_count] = yc
             representation_d[layer][:, input_count] = yd
 
-            input = modulate(yc, yd, modulation_factor = usr_args[:modulation_factor])
+            nlayers > 1 && layer < nlayers ? input = modulate(yc, yd, modulation_factor = usr_args[:modulation_factor][layer]) : nothing
         end
         print_progress(string("representing data for state ", seq_id, " of ", usr_args[:sequence][end], "..."), input_count, number_of_inputs)
 
@@ -88,13 +117,10 @@ function representation_loop!(seq_id::String, usr_args::Dict{Symbol, Any}, conne
 end
 
 function run_representation_procedure(usr_args::Dict{Symbol, Any})
-    get!(usr_args, :lambda, 0.1)
     get!(usr_args, :mode, 0)
     get!(usr_args, :verbose, false)
-    get!(usr_args, :modulation_factor, 0.5)
 
     sfid = usr_args[:sfid]
-
     init_proj = load_file(sfid, "0", "d")
 
     for seq_id in usr_args[:sequence]
@@ -114,17 +140,16 @@ end
 
 
 
-function represent_data(dataset::String, input_indices::Union{Int64, UnitRange{Int64}, Vector{Int64}}, sfid::String; kwargs...)
+function represent_data(input_indices::Union{Int64, UnitRange{Int64}, Vector{Int64}}, sfid::String; kwargs...)
     usr_args = Dict{Symbol, Any}(kwargs)
-    
-    usr_args[:dataset] = dataset
 
     isa(input_indices, Int64) ? begin usr_args[:input_indices] = 1:input_indices end : usr_args[:input_indices] = input_indices
-    fetch_inputs(usr_args)
-    
     usr_args[:sequence] = get_state_sequence(sfid)
     usr_args[:sfid] = sfid
+    
+    get_user_parameters(usr_args)
 
+    fetch_inputs(usr_args)
     run_representation_procedure(usr_args)
 
     return nothing
