@@ -40,9 +40,17 @@ function self_organize_layer(W::Matrix{<:Real}, init_proj::Matrix{<:Real}, input
     selforg_dictionary = get_selforg_dictionary(W, init_proj)
     
     if haskey(kwargs, :w_lateral)
-        y = simulate_layer(selforg_dictionary, input, mode = 0, w_lateral = kwargs[:w_lateral])
-        response = ones(size(y)) .* (y .> 0)
-        update_SynPot!(SynPot, y .> 0)
+        if haskey(kwargs, :lambda)
+            y = simulate_layer(selforg_dictionary, input, mode = 0, w_lateral = kwargs[:w_lateral], lambda = kwargs[:lambda])
+            response = ones(size(y)) .* (y .> 0)
+            update_SynPot!(SynPot, y .> 0)
+
+        else
+            y = simulate_layer(selforg_dictionary, input, mode = 0, w_lateral = kwargs[:w_lateral])
+            response = ones(size(y)) .* (y .> 0)
+            update_SynPot!(SynPot, y .> 0)
+
+        end
 
     else
         y = transpose(selforg_dictionary)*input
