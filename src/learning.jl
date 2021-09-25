@@ -69,11 +69,9 @@ end
     
 
 function multilayer_learning_loop(input_array::UnitRange{Int64}, usr_args::Dict{Symbol, Any}, connections...)
-    lambda = get!(usr_args, :lambda, 0.1)
     mode = get!(usr_args, :mode, 1)
     randomized = get!(usr_args, :randomized, true)
     verbose = get!(usr_args, :verbose, false)
-    modulation_factor = get!(usr_args, :modulation_factor, 0.5)
 
     nlayers = usr_args[:nlayers]
     W = connections[1]
@@ -88,11 +86,11 @@ function multilayer_learning_loop(input_array::UnitRange{Int64}, usr_args::Dict{
         randomized ? input = get_input(usr_args[:dataset]) : input = get_input(usr_args[:dataset], inputNo)
 
         for layer in 1:nlayers
-            W_updated, d_response = simulate_layer(W[layer], input, lambda = lambda, mode = mode, verbose = verbose)
-            c_response = self_organize_layer(W[layer], init_proj[layer], input, SynPot = SynPot[layer], w_lateral = w_lateral[layer])
+            W_updated, d_response = simulate_layer(W[layer], input, lambda = usr_args[:lambda][layer], mode = mode, verbose = verbose)
+            c_response = self_organize_layer(W[layer], init_proj[layer], input, SynPot = SynPot[layer], w_lateral = w_lateral[layer], lambda = usr_args[:lambda][layer])
 
             W[layer] = W_updated
-            input = modulate(c_response, d_response, modulation_factor = modulation_factor)
+            nlayers > 1 && layer < nlayers ? input = modulate(c_response, d_response, modulation_factor = usr_args[:modulation_factor][layer]) : nothing
         end
     end
 
