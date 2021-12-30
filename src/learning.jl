@@ -22,7 +22,7 @@ function get_init_connections(usr_args::Dict{Symbol, Any})
     if haskey(usr_args, :pfid)
         W = load_file(usr_args[:pfid], "projection", "p")
     else
-        W = initialize_feedforward_connections(usr_args[:dataset], layer_dims)
+        W = initialize_feedforward_connections(usr_args[:dataset], layer_dims, usr_args[:connection_sparseness])
         save_state(W, "projection", "p")
     end
 

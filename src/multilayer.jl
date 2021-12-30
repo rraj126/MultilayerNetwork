@@ -33,6 +33,18 @@ function update_modulation_factor!(modulation_factor::Array{Float64, 1}, nlayers
     return nothing
 end
 
+function update_connection_sparseness!(connection_sparseness::Array{Float64, 1}, nlayers::Int64)
+    if isempty(connection_sparseness)
+        if nlayers > 1
+            for _ in 1:nlayers push!(connection_sparseness, 0.01) end
+        end
+    else
+        length(connection_sparseness) == nlayers ? nothing : error("connection_sparseness must be specified for all layers")
+    end
+
+    return nothing
+end
+
 
 function create_network(usr_args::Dict{Symbol, Any})
     nlayers = get!(usr_args, :nlayers, 1)
@@ -46,6 +58,9 @@ function create_network(usr_args::Dict{Symbol, Any})
 
     modulation_factor = get!(usr_args, :modulation_factor, Array{Float64, 1}(undef, 0))
     update_modulation_factor!(modulation_factor, nlayers)
+
+    connection_sparseness = get!(usr_args, :connection_sparseness, Array{Float64, 1}(undef, 0))
+    update_connection_sparseness!(connection_sparseness, nlayers)
 
     return nothing
 end

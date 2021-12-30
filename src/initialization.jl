@@ -1,13 +1,17 @@
 using MultivariateStats
 using LinearAlgebra
 
-function generate_randomized_connections(m::Int64, n::Int64)
+function generate_randomized_connections(m::Int64, n::Int64, connection_sparseness::Float64)
     m < n ? error("initial connections require dimension expansion") : nothing
 
-    seed = rand(m, m)
-    SymMatrix = seed'*seed
-    eigenVectors = eigvecs(SymMatrix)
-    randomized_connections = col_normalize(eigenVectors[:, 1:n], showNorms = false)
+    seed = 1.0 .* (rand(m, n) .< connection_sparseness)
+    F = svd(seed)
+    size(F.U, 2) == n ? randomized_connections = F.U : randomized_connections = F.U[:, 1:n]
+
+    #seed = rand(m, m)
+    #SymMatrix = seed'*seed
+    #eigenVectors = eigvecs(SymMatrix)
+    #randomized_connections = col_normalize(eigenVectors[:, 1:n], showNorms = false)
 
     return randomized_connections 
 end
@@ -33,7 +37,7 @@ function generate_decorrelation_matrix(DATA::AbstractArray{<:Real, 2}, variance_
 end
 
 
-function initialize_feedforward_connections(dataset::String, layer_dims::Array{Int64, 1})
+function initialize_feedforward_connections(dataset::String, layer_dims::Array{Int64, 1}, connection_sparseness::Array{Float64, 1})
     fraction = 0.25
     variance_cutoff = 0.96
     nlayers = length(layer_dims)
@@ -53,7 +57,7 @@ function initialize_feedforward_connections(dataset::String, layer_dims::Array{I
     W = Array{Array{Float64, 2}, 1}(undef, nlayers)
     left_matrix = Q
     for layer in 1:nlayers
-        right_matrix = generate_randomized_connections(layer_dims[layer], size(D, 1))
+        right_matrix = generate_randomized_connections(layer_dims[layer], size(D, 1), connection_sparseness[layer])
         W[layer] = col_normalize(left_matrix*D*transpose(right_matrix), showNorms = false)
 
         left_matrix = right_matrix
