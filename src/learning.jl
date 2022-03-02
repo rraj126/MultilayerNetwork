@@ -90,7 +90,7 @@ function multilayer_learning_loop(input_array::UnitRange{Int64}, usr_args::Dict{
             c_response = self_organize_layer(W[layer], init_proj[layer], input, SynPot = SynPot[layer], w_lateral = w_lateral[layer], lambda = usr_args[:lambda][layer])
 
             W[layer] = W_updated
-            nlayers > 1 && layer < nlayers ? input = modulate(c_response, d_response, modulation_factor = usr_args[:modulation_factor][layer]) : nothing
+            nlayers > 1 && layer < nlayers ? input = modulate(c_response, d_response, modulation_factor = usr_args[:modulation_factor][layer], signal_cap = usr_args[:signal_cap][layer]) : nothing
         end
     end
 

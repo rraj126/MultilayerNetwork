@@ -21,6 +21,11 @@ function get_user_parameters(usr_args::Dict{Symbol, Any})
                 for m in eachmatch(r"[0-9]+.[0-9]+", value_string) push!(modulation_factor, parse(Float64, m.match)) end
                 get!(usr_args, :modulation_factor, modulation_factor)
 
+            elseif arg_string == "signal_cap"
+                signal_cap = Array{Float64, 1}(undef, 0)
+                for m in eachmatch(r"[0-9]+.[0-9]+", value_string) push!(signal_cap, parse(Float64, m.match)) end
+                get!(usr_args, :signal_cap, signal_cap)
+
             elseif arg_string == "dataset"
                 get!(usr_args, :dataset, value_string)
 
@@ -105,7 +110,7 @@ function representation_loop!(seq_id::String, usr_args::Dict{Symbol, Any}, conne
             representation_c[layer][:, input_count] = yc
             representation_d[layer][:, input_count] = yd
 
-            nlayers > 1 && layer < nlayers ? input = modulate(yc, yd, modulation_factor = usr_args[:modulation_factor][layer]) : nothing
+            nlayers > 1 && layer < nlayers ? input = modulate(yc, yd, modulation_factor = usr_args[:modulation_factor][layer], signal_cap = usr_args[:signal_cap][layer]) : nothing
         end
         print_progress(string("representing data for state ", seq_id, " of ", usr_args[:sequence][end], "..."), input_count, number_of_inputs)
 
