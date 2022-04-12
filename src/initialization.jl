@@ -47,7 +47,7 @@ function initialize_feedforward_connections(dataset::String, layer_dims::Array{I
 
     DATA = Array{eltype(sample), 2}(undef, length(sample), sample_size)
     for i in 1:sample_size
-        print_progress("fetching random inputs for initialization...", i, sample_size)  
+        print_progress("fetching initialization inputs...", i, sample_size)  
         DATA[:, i] = input_call(rand(1:max_inputs)) 
     end
 
@@ -67,10 +67,10 @@ function initialize_feedforward_connections(dataset::String, layer_dims::Array{I
 end
 
 
-function initialize_lateral_connections(max_inhib::Float64, layer_dims::Array{Int64, 1})
+function initialize_lateral_connections(max_inhib::Array{Float64, 1}, layer_dims::Array{Int64, 1})
     nlayers = length(layer_dims)
     w_lateral = Array{Array{Float64, 2}, 1}(undef, nlayers)
-    for layer in 1:nlayers w_lateral[layer] = max_inhib .* ones(layer_dims[layer], layer_dims[layer]) end
+    for layer in 1:nlayers w_lateral[layer] = max_inhib[layer] .* ones(layer_dims[layer], layer_dims[layer]) end
 
     return w_lateral
 end

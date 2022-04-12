@@ -1,5 +1,4 @@
-function update_layer_dims!(nlayers::Int64, layer_dims::Array{Int64, 1})
-
+function update_layer_dims!(layer_dims::Array{Int64, 1}, nlayers::Int64)
     if isempty(layer_dims)
         for i in 1:nlayers push!(layer_dims, 1000*i) end
     else
@@ -9,13 +8,11 @@ function update_layer_dims!(nlayers::Int64, layer_dims::Array{Int64, 1})
     return nothing
 end
 
-function update_lambda!(lambda::Array{Float64, 1}, layer_dims::Array{Int64, 1})
+function update_lambda!(lambda::Array{Float64, 1}, nlayers::Int64)
     if isempty(lambda)
-        min_size = minimum(layer_dims)
-        for layer in eachindex(layer_dims) push!(lambda, 0.1*layer_dims[layer]/min_size) end
-
+        for _ in 1:nlayers push!(lambda, 0.1) end
     else
-        length(lambda) == length(layer_dims) ? nothing : error("lambda must be specified for each layer")
+        length(lambda) == nlayers ? nothing : error("lambda must be specified for each layer")
     end
 
     return nothing
@@ -47,9 +44,7 @@ end
 
 function update_connection_sparseness!(connection_sparseness::Array{Float64, 1}, nlayers::Int64)
     if isempty(connection_sparseness)
-        if nlayers > 1
-            for _ in 1:nlayers push!(connection_sparseness, 0.01) end
-        end
+        for _ in 1:nlayers push!(connection_sparseness, 0.01) end
     else
         length(connection_sparseness) == nlayers ? nothing : error("connection_sparseness must be specified for all layers")
     end
@@ -57,16 +52,25 @@ function update_connection_sparseness!(connection_sparseness::Array{Float64, 1},
     return nothing
 end
 
+function update_max_inhib!(max_inhib::Array{Float64, 1}, nlayers::Int64)
+    if isempty(max_inhib)
+        for _ in 1:nlayers push!(max_inhib, 10.0) end
+    else
+        length(max_inhib) == nlayers ? nothing : error("max_inhib must be specified for all layers")
+    end
+
+    return nothing
+end
 
 function create_network(usr_args::Dict{Symbol, Any})
     nlayers = get!(usr_args, :nlayers, 1)
     isa(nlayers, Int64) && nlayers > 0 ? nothing : error("number of layers must be a positive integer")
 
     layer_dims = get!(usr_args, :layer_dims, Array{Int64, 1}(undef, 0))
-    update_layer_dims!(nlayers, layer_dims)
+    update_layer_dims!(layer_dims, nlayers)
 
     lambda = get!(usr_args, :lambda, Array{Float64, 1}(undef, 0))
-    update_lambda!(lambda, layer_dims)
+    update_lambda!(lambda, nlayers)
 
     modulation_factor = get!(usr_args, :modulation_factor, Array{Float64, 1}(undef, 0))
     update_modulation_factor!(modulation_factor, nlayers)
@@ -76,6 +80,9 @@ function create_network(usr_args::Dict{Symbol, Any})
 
     connection_sparseness = get!(usr_args, :connection_sparseness, Array{Float64, 1}(undef, 0))
     update_connection_sparseness!(connection_sparseness, nlayers)
+
+    max_inhib = get!(usr_args, :max_inhib, Array{Float64, 1}(undef, 0))
+    update_max_inhib!(max_inhib, nlayers)
 
     return nothing
 end
