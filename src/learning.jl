@@ -13,7 +13,7 @@ function get_organization_parameters(usr_args::Dict{Symbol, Any})
 end
 
 function get_init_connections(usr_args::Dict{Symbol, Any})
-    max_inhib = get!(usr_args, :max_inhib, 10.0)
+    max_inhib = usr_args[:max_inhib]
     nlayers = usr_args[:nlayers]
     layer_dims = usr_args[:layer_dims]
 
