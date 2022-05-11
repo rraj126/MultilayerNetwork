@@ -167,7 +167,7 @@ function run_network(usr_args::Dict{Symbol, Any})
 end
 
 
-function learn_data(dataset::String, break_points::Union{Int64, StepRange, Vector{Int64}}; kwargs...)
+function learn_data(dataset::String, break_points::Union{Int64, StepRange{Int64, Int64}, Vector{Int64}}; kwargs...)
     usr_args = Dict{Symbol, Any}(kwargs)
 
     usr_args[:dataset] = dataset
