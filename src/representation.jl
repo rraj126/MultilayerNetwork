@@ -35,14 +35,14 @@ function get_user_parameters(usr_args::Dict{Symbol, Any})
     end
 end
 
-function fetch_inputs(usr_args::Dict{Symbol, Any})
+function fetch_test_inputs(usr_args::Dict{Symbol, Any})
     test_set_file = string(pwd(), "/data-files/test_set")
     input_matrix = initialize_input_matrix(usr_args[:dataset], length(usr_args[:input_indices]))
 
     input_count = 1
     for inputNo in usr_args[:input_indices]
         print_progress("fetching representation inputs...", input_count, length(usr_args[:input_indices]))
-        input_matrix[:, input_count] = get_input(usr_args[:dataset], inputNo)
+        input_matrix[:, input_count] = get_input(usr_args[:dataset], index = inputNo)
         input_count += 1
 
     end
@@ -145,7 +145,7 @@ end
 
 
 
-function represent_data(input_indices::Union{Int64, UnitRange{Int64}, Vector{Int64}}, sfid::String; kwargs...)
+function represent_data(input_indices::Union{Int64, UnitRange{Int64}, StepRange{Int64, Int64}, Vector{Int64}}, sfid::String; kwargs...)
     usr_args = Dict{Symbol, Any}(kwargs)
 
     isa(input_indices, Int64) ? begin usr_args[:input_indices] = 1:input_indices end : usr_args[:input_indices] = input_indices
@@ -154,7 +154,7 @@ function represent_data(input_indices::Union{Int64, UnitRange{Int64}, Vector{Int
     
     get_user_parameters(usr_args)
 
-    fetch_inputs(usr_args)
+    fetch_test_inputs(usr_args)
     run_representation_procedure(usr_args)
 
     return nothing

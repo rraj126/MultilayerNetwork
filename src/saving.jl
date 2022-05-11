@@ -123,3 +123,38 @@ end
 
 
 load_file(varname::String, identifier::String) = load_file("", varname, identifier)
+
+
+function get_sfid(fid::String)
+    param_file = string(pwd(), "/parameter-files/parameters-", fid, ".txt")
+    sfid = ""
+
+    open(param_file, "r") do f
+        while !eof(f)
+            s = readline(f)
+
+            colon_index = findfirst(isequal(':'), s)
+            arg_string = s[1:colon_index-2]
+            value_string = s[colon_index+2:end]
+
+            arg_string == "sfid" ? sfid = value_string : nothing
+
+        end
+    end
+    return sfid
+end
+
+function print_simulation_parameters(fid::String)
+    sfid = get_sfid(fid)
+
+    isempty(sfid) ? read_fid = fid : read_fid = sfid
+    param_file = string(pwd(), "/parameter-files/parameters-", read_fid, ".txt")
+
+    open(param_file, "r") do f
+        while !eof(f)
+            s = readline(f)
+            println("$s")
+
+        end
+    end
+end

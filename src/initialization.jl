@@ -42,7 +42,7 @@ function initialize_feedforward_connections(dataset::String, layer_dims::Array{I
     variance_cutoff = 0.96
     nlayers = length(layer_dims)
 
-    sample, max_inputs, input_call = get_dataset_sepcifics(dataset)
+    sample, max_inputs, input_call, _ = get_dataset_sepcifics(dataset)
     sample_size = convert(Int64, round(fraction*max_inputs))
 
     DATA = Array{eltype(sample), 2}(undef, length(sample), sample_size)
@@ -86,8 +86,8 @@ end
 
 
 function initialize_input_matrix(dataset::String, number_of_inputs::Int64)
-    sample, _, _ = get_dataset_sepcifics(dataset)
-    return Array{Float64, 2}(undef, length(sample), number_of_inputs)
+    sample, _, _, _ = get_dataset_sepcifics(dataset)
+    return Array{eltype(sample), 2}(undef, length(sample), number_of_inputs)
 end
 
 

@@ -36,6 +36,42 @@ function get_init_connections(usr_args::Dict{Symbol, Any})
 end
 
 
+function get_training_inputs(dataset::String, input_array::UnitRange{Int64}, randomized::Bool)
+    number_of_inputs = length(input_array)
+    input_matrix = initialize_input_matrix(dataset, number_of_inputs)
+
+    _, _, _, classes = get_dataset_sepcifics(dataset)
+    isnothing(classes) ? error("no classes defined for dataset") : nothing
+
+    if randomized
+        for inputNo in 1:number_of_inputs
+            class = rand(classes) 
+            input_matrix[:, inputNo] = get_input(dataset, class = class) 
+        end
+
+    else
+        number_of_repeats = ceil(Int64, number_of_inputs/length(classes))
+        number_of_repeats*length(classes) > number_of_inputs ? begin @warn "mismatched classes and repeats, last class will be truncated" end : nothing
+
+        class_count = 1
+
+        for class in classes
+            input_indices = 1+number_of_repeats*(class_count-1):number_of_repeats*class_count
+            try
+                input_matrix[:, input_indices] = get_input(dataset, class = class, repeats = number_of_repeats)
+                class_count += 1
+            catch
+                remaining_inputs = length(input_indices[1]:number_of_inputs)
+                input_matrix[:, input_indices[1]:number_of_inputs] = get_input(dataset, class = class, repeats = remaining_inputs)
+            end
+        
+        end
+    end
+
+    return input_matrix
+end
+
+
 @inline function SynPot_to_matrix!(SynPot::Dict{Tuple{Int64, Int64}, Int64}, connection_matrix::Array{Float64, 2}, w_lateral::Array{Float64, 2}, epoch::Int64)
     for k in keys(SynPot)
         connection_matrix[CartesianIndex(k)] += sign(SynPot[k])
@@ -81,9 +117,10 @@ function multilayer_learning_loop(input_array::UnitRange{Int64}, usr_args::Dict{
     SynPot = Array{Dict{Tuple{Int64, Int64}, Int64}, 1}(undef, nlayers)
     for i in 1:nlayers SynPot[i] = Dict{Tuple{Int64, Int64}, Int64}() end
 
+    input_matrix = get_training_inputs(usr_args[:dataset], input_array, randomized)
 
-    for inputNo in input_array
-        randomized ? input = get_input(usr_args[:dataset]) : input = get_input(usr_args[:dataset], inputNo)
+    for inputNo in 1:length(input_array)
+        input = vec(input_matrix[:, inputNo])
 
         for layer in 1:nlayers
             W_updated, d_response = simulate_layer(W[layer], input, lambda = usr_args[:lambda][layer], mode = mode, verbose = verbose)
