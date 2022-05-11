@@ -12,12 +12,20 @@ end
     
 end
 
-@inline function load_Symbols_data(input_number::Int64; input_type::DataType = Float64)
+@inline function load_Symbols_data(input_number::Int64, path_to_data::String)
     
-    return nothing
+    isfile(path_to_data) ? nothing : error("incorrect data path")
+    input_number > 1000 ? varname = "SymbolsMatrix" : varname = "CorruptedSymbols"
+
+    file = matopen(path_to_data)
+    input = read(file, varname)
+    close(file)
+
+    return input[:, input_number]
     
 end
 
+<<<<<<< HEAD
 @inline function load_3DObjects_data(input_number::Int64; rotation_direction::String = "x")
     "ObjectMatrix_allObjects_allRotations.mat" in readdir() ? nothing : error("object view file not in present directory")
     
@@ -31,6 +39,16 @@ end
     
     return vec(matrix[:, view_number])
     
+=======
+@inline function load_custom_data(input_number::Int64, path_to_data::String, varname::String)
+    isfile(path_to_data) ? nothing : error("incorrect data path")
+
+    file = matopen(path_to_data)
+    input = read(file, varname)
+    close(file)
+
+    return input[:, input_number]
+>>>>>>> 0ff8b0b770df11390fec93c1e7a0ef2781e37622
 end
 
 
@@ -48,7 +66,11 @@ function get_dataset_sepcifics(dataset::String)
         classes = nothing
 
     elseif dataset == "Symbols"
+<<<<<<< HEAD
         sample = zeros(256)
+=======
+        sample = load_Symbols_data(1, "/Users/rraj/Desktop/Symbols/SymbolsMatrix.mat")
+>>>>>>> 0ff8b0b770df11390fec93c1e7a0ef2781e37622
         max_inputs = 1000
         input_call_function = load_Symbols_data
         classes = nothing
