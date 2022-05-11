@@ -37,6 +37,8 @@ end
     close(file)
     
     return vec(matrix[:, view_number])
+
+end
     
 @inline function load_custom_data(input_number::Int64, path_to_data::String, varname::String)
     isfile(path_to_data) ? nothing : error("incorrect data path")
