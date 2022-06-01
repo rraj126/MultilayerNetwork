@@ -26,10 +26,12 @@ function get_selforg_dictionary(W::Matrix{<:Real}, init_proj::Matrix{<:Real})
     d = similar(W)
     copyto!(d, W)
     d .= d .- init_proj
-    iszero(std(d)) ? d .= 0.0 : d .= d./std(d)
-    d .= d.*(d .> 1.0)
+    #iszero(std(d)) ? d .= 0.0 : d .= d./std(d)
+    d .= d ./ std(d, dims = 1) #normalization
+    d .= .!isinf.(d) .* d
+    d .= d .* (d .> 1.0) #pruning
     
-    col_normalize!(d, d, showNorms = false)
+    #col_normalize!(d, d, showNorms = false)
     return d
 end
 

@@ -21,7 +21,6 @@ function save_parameters(Args::Dict{Symbol, Any})
     t = date_stamp()
     filename = string(param_dir, "parameters", t, ".txt")
 
-    print("saving parameter file in ", param_dir, "... \n")
     f = open(filename, "a")
     for k in keys(Args) write(f, string(k, " : ", string(Args[k]), "\n")) end
     close(f)
@@ -61,6 +60,8 @@ function save_state_sequences()
     data_dir = string(pwd(), "/data-files/")
     t = date_stamp()
 
+    println("saving files *$t..."); 
+
     for identifier in ["c", "d", "rc", "rd", "p"]
         if identifier == "p"
             dest_dir = string(data_dir, "projection-files/")
@@ -68,7 +69,7 @@ function save_state_sequences()
             src = string(dest_dir, "state-file-", identifier)
             dest = string(dest_dir, "Projection", t)
     
-            isfile(src) ? begin print("saving projection file in ", dest_dir, "... \n"); mv(src, dest) end : nothing
+            isfile(src) ? mv(src, dest) : nothing
 
         elseif occursin("r", identifier)
             dest_dir = string(data_dir, "representation-files/")
@@ -76,7 +77,7 @@ function save_state_sequences()
             src = string(dest_dir, "state-file-", identifier)
             dest = string(dest_dir, "Representations-", identifier[2], t)
 
-            isfile(src) ? begin print("saving representation file in ", dest_dir, "... \n"); mv(src, dest) end : nothing
+            isfile(src) ? mv(src, dest) : nothing
 
         else
             dest_dir = string(data_dir, "state-files/")
@@ -84,7 +85,7 @@ function save_state_sequences()
             src = string(dest_dir, "state-file-", identifier)
             dest = string(dest_dir, "States-", identifier, t)
 
-            isfile(src) ? begin print("saving network-state file in ", dest_dir, "... \n"); mv(src, dest) end : nothing
+            isfile(src) ? mv(src, dest) : nothing
 
         end
     end

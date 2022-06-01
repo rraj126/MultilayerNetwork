@@ -35,24 +35,56 @@ function get_user_parameters(usr_args::Dict{Symbol, Any})
     end
 end
 
-function fetch_test_inputs(usr_args::Dict{Symbol, Any})
-    test_set_file = string(pwd(), "/data-files/test_set")
-    input_matrix = initialize_input_matrix(usr_args[:dataset], length(usr_args[:input_indices]))
+function make_test_set(usr_args::Dict{Symbol, Any})
+    id = ""
+
+    if haskey(usr_args, :input_indices)
+        if haskey(usr_args, :tfid)
+            test_set_file =  string(pwd(), "/test-files/test-", usr_args[:tfid])
+            isfile(test_set_file) ? begin @info "Got both input indices and tfid. Using tfid..."; id = usr_args[:tfid] end : error("invalid tfid")
+
+        else
+            id = fetch_test_inputs(usr_args[:dataset], usr_args[:input_indices])
+        end
+    else
+        if haskey(usr_args, :tfid)
+            test_set_file =  string(pwd(), "/test-files/test-", usr_args[:tfid])
+            isfile(test_set_file) ? id = usr_args[:tfid] : error("invalid tfid")
+
+        else
+            error("input indices or tfid must be provided")
+        end
+    end
+
+    return id
+end
+
+
+
+
+function fetch_test_inputs(dataset::String, input_indices::Union{Int64, UnitRange{Int64}, StepRange{Int64, Int64}})
+    t = date_stamp()
+    
+    test_dir = string(pwd(), "/test-files/")
+    !isdir(test_dir) ? mkdir(test_dir) : nothing
+
+    test_set_file = string(test_dir, "test", t)
+
+    input_matrix = initialize_input_matrix(dataset, length(input_indices))
 
     input_count = 1
-    for inputNo in usr_args[:input_indices]
-        print_progress("fetching representation inputs...", input_count, length(usr_args[:input_indices]))
-        input_matrix[:, input_count] = get_input(usr_args[:dataset], index = inputNo)
+    for inputNo in input_indices
+        print_progress("fetching representation inputs...", input_count, length(input_indices))
+        input_matrix[:, input_count] = get_input(dataset, index = inputNo)
         input_count += 1
 
     end
-    
+        
     save(File{format"JLD"}(test_set_file), "test_set", input_matrix)
-    return nothing
+    return t[2:end]
 end
 
-load_test_set() = load_jld_data("test_set", "test_set")
-remove_test_set() = rm(string(pwd(), "/data-files/test_set"))
+load_test_set(tfid::String) = load(File{format"JLD"}(string(pwd(), "/test-files/test-", tfid)), "test_set")
 
 
 function check_file(file::String)
@@ -92,7 +124,7 @@ function representation_loop!(seq_id::String, usr_args::Dict{Symbol, Any}, conne
     Wd = connections[1]
     w_lateral = connections[2]
     init_proj = connections[3]
-    test_inputs = load_test_set()
+    test_inputs = load_test_set(usr_args[:tfid])
 
     nlayers = length(init_proj)
     number_of_inputs = size(test_inputs, 2)
@@ -136,7 +168,7 @@ function run_representation_procedure(usr_args::Dict{Symbol, Any})
         end
 
     end
-    remove_test_set()
+
     save_state_sequences()
     save_parameters(usr_args)
 
@@ -154,7 +186,8 @@ function represent_data(input_indices::Union{Int64, UnitRange{Int64}, StepRange{
     
     get_user_parameters(usr_args)
 
-    fetch_test_inputs(usr_args)
+    id = make_test_set(usr_args)
+    !isempty(id) ? usr_args[:tfid] = id : error("tfid could not be determined")
     run_representation_procedure(usr_args)
 
     return nothing
