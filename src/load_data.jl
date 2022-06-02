@@ -34,7 +34,7 @@ end
     iszero(r) ? begin object_number = q; view_number = 360 end : begin object_number = q+1; view_number = r end
 
     varname = string("imageMatrix_", string(object_number), "_", rotation_direction)
-    file = matopen("ObjectMatrix_allObjects_allRotations.mat")
+    file = matopen("$data_dir/ObjectMatrix_allObjects_allRotations.mat")
     matrix = read(file, varname)
     close(file)
     
