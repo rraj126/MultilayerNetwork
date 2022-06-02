@@ -26,7 +26,9 @@ end
 end
 
 @inline function load_3DObjects_data(input_number::Int64; rotation_direction::String = "x")
-    "ObjectMatrix_allObjects_allRotations.mat" in readdir() ? nothing : error("object view file not in present directory")
+    data_dir = string(pwd(), "/Data")
+    isdir(data_dir) ? nothing : error("no directory named Data found")
+    "ObjectMatrix_allObjects_allRotations.mat" in readdir(data_dir, join = false) ? nothing : error("object view file not in data directory")
     
     q, r = divrem(input_number, 360)
     iszero(r) ? begin object_number = q; view_number = 360 end : begin object_number = q+1; view_number = r end

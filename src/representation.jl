@@ -40,7 +40,7 @@ function make_test_set(usr_args::Dict{Symbol, Any})
 
     if haskey(usr_args, :input_indices)
         if haskey(usr_args, :tfid)
-            test_set_file =  string(pwd(), "/test-files/test-", usr_args[:tfid])
+            test_set_file =  string(pwd(), "/test-files/Test-", usr_args[:tfid])
             isfile(test_set_file) ? begin @info "Got both input indices and tfid. Using tfid..."; id = usr_args[:tfid] end : error("invalid tfid")
 
         else
@@ -48,7 +48,7 @@ function make_test_set(usr_args::Dict{Symbol, Any})
         end
     else
         if haskey(usr_args, :tfid)
-            test_set_file =  string(pwd(), "/test-files/test-", usr_args[:tfid])
+            test_set_file =  string(pwd(), "/test-files/Test-", usr_args[:tfid])
             isfile(test_set_file) ? id = usr_args[:tfid] : error("invalid tfid")
 
         else
@@ -68,7 +68,7 @@ function fetch_test_inputs(dataset::String, input_indices::Union{Int64, UnitRang
     test_dir = string(pwd(), "/test-files/")
     !isdir(test_dir) ? mkdir(test_dir) : nothing
 
-    test_set_file = string(test_dir, "test", t)
+    test_set_file = string(test_dir, "Test", t)
 
     input_matrix = initialize_input_matrix(dataset, length(input_indices))
 
@@ -84,7 +84,7 @@ function fetch_test_inputs(dataset::String, input_indices::Union{Int64, UnitRang
     return t[2:end]
 end
 
-load_test_set(tfid::String) = load(File{format"JLD"}(string(pwd(), "/test-files/test-", tfid)), "test_set")
+load_test_set(tfid::String) = load(File{format"JLD"}(string(pwd(), "/test-files/Test-", tfid)), "test_set")
 
 
 function check_file(file::String)
