@@ -6,9 +6,17 @@ using MLDatasets, MAT
     
 end
 
-@inline function load_Faces_data(input_number::Int64; input_type::DataType = Float64)
+@inline function load_Faces_data(input_number::Int64; noise_level::Int64 = 5)
+    data_dir = string(pwd(), "/Data")
+    isdir(data_dir) ? nothing : error("no directory named Data found")
+    "FaceMatrix_All_saltnpepper.mat" in readdir(data_dir, join = false) ? nothing : error("noisy face file not in data directory")
+
+    varname = string("subject_", string(input_number))
+    file = matopen("$data_dir/FaceMatrix_All_saltnpepper.mat")
+    matrix = read(file, varname)
+    close(file)
     
-    return nothing
+    return vec(matrix[noise_level][:, rand(1:100)])
     
 end
 
@@ -61,14 +69,13 @@ function get_dataset_sepcifics(dataset::String)
         classes = 0:9
 
     elseif dataset == "Faces"
-        sample = load_Faces_data(1)
+        sample = zeros(10000)
         max_inputs = 2000
         input_call_function = load_Faces_data
-        classes = nothing
+        classes = 0:1
 
     elseif dataset == "Symbols"
         sample = zeros(256)
-        sample = load_Symbols_data(1, "/Users/rraj/Desktop/Symbols/SymbolsMatrix.mat")
         max_inputs = 1000
         input_call_function = load_Symbols_data
         classes = nothing
@@ -102,6 +109,10 @@ end
     elseif dataset == "3DObjects"
         random_start = rand(1:360-repeats+1)
         for r in 1:repeats ret_index[r] = 360*(class - 1) + random_start + r - 1 end
+
+    elseif dataset == "Faces"
+        class == 0 ? begin start_index = 1; end_index = 950 end : begin start_index = 1001; end_index = 1950 end 
+        ret_index = rand(start_index:end_index, repeats)
     end
 
     return ret_index

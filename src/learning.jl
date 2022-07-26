@@ -17,7 +17,9 @@ function get_init_connections(usr_args::Dict{Symbol, Any})
     nlayers = usr_args[:nlayers]
     layer_dims = usr_args[:layer_dims]
 
-    print("initializing connections... \n")
+    t = date_stamp()
+
+    print("initializing connections @$t... \n")
 
     if haskey(usr_args, :pfid)
         W = load_file(usr_args[:pfid], "projection", "p")
