@@ -6,7 +6,7 @@ using MLDatasets, MAT
     
 end
 
-@inline function load_Faces_data(input_number::Int64; noise_level::Int64 = 5)
+@inline function load_Faces_data(input_number::Int64; noise_level::Int64 = 1)
     data_dir = string(pwd(), "/Data")
     isdir(data_dir) ? nothing : error("no directory named Data found")
     "FaceMatrix_All_saltnpepper.mat" in readdir(data_dir, join = false) ? nothing : error("noisy face file not in data directory")
@@ -20,20 +20,35 @@ end
     
 end
 
-@inline function load_Symbols_data(input_number::Int64, path_to_data::String)
-    
-    isfile(path_to_data) ? nothing : error("incorrect data path")
-    input_number > 1000 ? varname = "SymbolsMatrix" : varname = "CorruptedSymbols"
+@inline function load_Symbols_data(input_number::Int64)
+    data_dir = string(pwd(), "/Data")
+    isdir(data_dir) ? nothing : error("no directory named Data found")
+    "SymbolsMatrix_large.mat" in readdir(data_dir, join = false) ? nothing : error("large symbols file not in data directory")
 
-    file = matopen(path_to_data)
-    input = read(file, varname)
+    varname = "SymbolsMatrix_large"
+    file = matopen("$data_dir/SymbolsMatrix_large.mat")
+    matrix = read(file, varname)
     close(file)
-
-    return input[:, input_number]
+    
+    return vec(matrix[:, input_number])
     
 end
 
-@inline function load_3DObjects_data(input_number::Int64; rotation_direction::String = "x")
+@inline function load_SymbolsFacesCombined_data(input_number::Int64)
+    data_dir = string(pwd(), "/Data")
+    isdir(data_dir) ? nothing : error("no directory named Data found")
+    "SymbolsFaces_combined.mat" in readdir(data_dir, join = false) ? nothing : error("combined symbols and face file not in data directory")
+
+    varname = "SymbolsFaces_combined"
+    file = matopen("$data_dir/SymbolsFaces_combined.mat")
+    matrix = read(file, varname)
+    close(file)
+    
+    return vec(matrix[:, input_number])
+    
+end
+
+@inline function load_3DObjects_oldrotation_data(input_number::Int64; rotation_direction::String = "x")
     data_dir = string(pwd(), "/Data")
     isdir(data_dir) ? nothing : error("no directory named Data found")
     "ObjectMatrix_allObjects_allRotations.mat" in readdir(data_dir, join = false) ? nothing : error("object view file not in data directory")
@@ -49,7 +64,58 @@ end
     return vec(matrix[:, view_number])
 
 end
+   
+@inline function load_3DObjects_rotation_data(input_number::Int64)
+    data_dir = string(pwd(), "/Data")
+    isdir(data_dir) ? nothing : error("no directory named Data found")
+    "ObjectMatrix_allObjects_allRotations.mat" in readdir(data_dir, join = false) ? nothing : error("object view file not in data directory")
     
+    q, r = divrem(input_number, 360)
+    iszero(r) ? begin object_number = q; view_number = 360 end : begin object_number = q+1; view_number = r end
+
+    varname = string("imageMatrix_", string(object_number), "_r")
+    file = matopen("$data_dir/ObjectMatrix_allObjects_allRotations.mat")
+    matrix = read(file, varname)
+    close(file)
+    
+    return vec(matrix[:, view_number])
+
+end
+
+@inline function load_3DObjects_size_data(input_number::Int64)
+    data_dir = string(pwd(), "/Data")
+    isdir(data_dir) ? nothing : error("no directory named Data found")
+    "ObjectMatrix_allObjects_allSizes.mat" in readdir(data_dir, join = false) ? nothing : error("object view file not in data directory")
+    
+    q, r = divrem(input_number, 360)
+    iszero(r) ? begin object_number = q; view_number = 360 end : begin object_number = q+1; view_number = r end
+
+    varname = string("imageMatrix_", string(object_number), "_s")
+    file = matopen("$data_dir/ObjectMatrix_allObjects_allSizes.mat")
+    matrix = read(file, varname)
+    close(file)
+    
+    return vec(matrix[:, view_number])
+
+end
+
+@inline function load_3DObjects_translation_data(input_number::Int64; rotation_direction::String = "x")
+    data_dir = string(pwd(), "/Data")
+    isdir(data_dir) ? nothing : error("no directory named Data found")
+    "ObjectMatrix_allObjects_allPositions.mat" in readdir(data_dir, join = false) ? nothing : error("object view file not in data directory")
+    
+    q, r = divrem(input_number, 360)
+    iszero(r) ? begin object_number = q; view_number = 360 end : begin object_number = q+1; view_number = r end
+
+    varname = string("imageMatrix_", string(object_number), "_t")
+    file = matopen("$data_dir/ObjectMatrix_allObjects_allPositions.mat")
+    matrix = read(file, varname)
+    close(file)
+    
+    return vec(matrix[:, view_number])
+
+end
+
 @inline function load_custom_data(input_number::Int64, path_to_data::String, varname::String)
     isfile(path_to_data) ? nothing : error("incorrect data path")
 
@@ -75,15 +141,33 @@ function get_dataset_sepcifics(dataset::String)
         classes = 0:1
 
     elseif dataset == "Symbols"
-        sample = zeros(256)
+        sample = zeros(10000)
         max_inputs = 1000
         input_call_function = load_Symbols_data
-        classes = nothing
+        classes = 1:1
 
-    elseif dataset == "3DObjects"
+    elseif dataset == "SymbolsFacesCombined"
+        sample = zeros(10000)
+        max_inputs = 3000
+        input_call_function = load_SymbolsFacesCombined_data
+        classes = 1:1
+
+    elseif dataset == "3DObjects_r"
         sample = zeros(10000)
         max_inputs = 18000
-        input_call_function = load_3DObjects_data
+        input_call_function = load_3DObjects_rotation_data
+        classes = 1:50
+
+    elseif dataset == "3DObjects_s"
+        sample = zeros(10000)
+        max_inputs = 18000
+        input_call_function = load_3DObjects_size_data
+        classes = 1:50
+
+    elseif dataset == "3DObjects_t"
+        sample = zeros(10000)
+        max_inputs = 18000
+        input_call_function = load_3DObjects_translation_data
         classes = 1:50
 
     else
@@ -106,13 +190,27 @@ end
             end
         end
 
-    elseif dataset == "3DObjects"
+    elseif dataset == "3DObjects_r"
+        random_start = rand(1:360-repeats+1)
+        for r in 1:repeats ret_index[r] = 360*(class - 1) + random_start + r - 1 end
+
+    elseif dataset == "3DObjects_s"
+        random_start = rand(1:360-repeats+1)
+        for r in 1:repeats ret_index[r] = 360*(class - 1) + random_start + r - 1 end
+
+    elseif dataset == "3DObjects_t"
         random_start = rand(1:360-repeats+1)
         for r in 1:repeats ret_index[r] = 360*(class - 1) + random_start + r - 1 end
 
     elseif dataset == "Faces"
         class == 0 ? begin start_index = 1; end_index = 950 end : begin start_index = 1001; end_index = 1950 end 
         ret_index = rand(start_index:end_index, repeats)
+
+    elseif dataset == "Symbols"
+        ret_index = rand(1:1000, repeats)
+
+    elseif dataset == "SymbolsFacesCombined"
+        ret_index = rand(1:3000, repeats)
     end
 
     return ret_index
