@@ -116,6 +116,20 @@ end
 
 end
 
+@inline function load_Sequence_data(input_number::Int64)
+    data_dir = string(pwd(), "/Data")
+    isdir(data_dir) ? nothing : error("no directory named Data found")
+    "Sequences.mat" in readdir(data_dir, join = false) ? nothing : error("sequence file not in data directory")
+
+    varname = "Sequences"
+    file = matopen("$data_dir/Sequences.mat")
+    matrix = read(file, varname)
+    close(file)
+    
+    return vec(matrix[:, input_number])
+    
+end
+
 @inline function load_custom_data(input_number::Int64, path_to_data::String, varname::String)
     isfile(path_to_data) ? nothing : error("incorrect data path")
 
@@ -170,6 +184,12 @@ function get_dataset_sepcifics(dataset::String)
         input_call_function = load_3DObjects_translation_data
         classes = 1:50
 
+    elseif dataset == "Sequences"
+        sample = zeros(48)
+        max_inputs = 18596
+        input_call_function = load_Sequence_data
+        classes = 1:1
+
     else
         error("dataset not recognized")
 
@@ -211,6 +231,9 @@ end
 
     elseif dataset == "SymbolsFacesCombined"
         ret_index = rand(1:3000, repeats)
+
+    elseif dataset == "Sequences"
+        ret_index = rand(1:18596, repeats)
     end
 
     return ret_index
